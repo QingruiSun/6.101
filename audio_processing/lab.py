@@ -9,40 +9,51 @@ import struct
 
 
 def backwards(sound):
-    raise NotImplementedError
+    r = sound["rate"]
+    samples_len = len(sound["samples"])
+    reverse_sample = []
+    for i in range(samples_len):
+        reverse_sample.append(sound["samples"][samples_len - 1 - i])
+    return {"rate": r, "samples": reverse_sample}
 
 
 def mix(sound1, sound2, p):
+    """
+    Return mix of two sounds.
 
+    Args:
+        sound1: First sound dictionary
+        sound2: Second sound dictionary
+        p: mix rate
 
-    # mix 2 good sounds
-    if ("rate" in sound1.keys() and "rate" in sound2.keys() and sound1["rate"]==sound2["rate"])==False: 
-        
+    Returns:
+        A new sound dictionary is mix of two sound.
+    """
+    if not (
+        "rate" in sound1.keys()
+        and "rate" in sound2.keys()
+        and sound1["rate"] == sound2["rate"]
+    ):
         print("no")
         return
 
-    r=sound1["rate"]# get rate
-    sound1=sound1["samples"]
-    sound2=sound2["samples"]
-    if len(sound1)<len(sound2):l=len(sound1)
-    elif len(sound2)<len(sound1):l=len(sound2)
-    elif len(sound1)==len(sound2):l=len(sound1)
+    r = sound1["rate"]  # get rate
+    sound1 = sound1["samples"]
+    sound2 = sound2["samples"]
+    if len(sound1) < len(sound2):
+        min_len = len(sound1)
     else:
-        print("whoops") 
-        return
+        min_len = len(sound2)
 
-    s= []
-    x= 0
-    while x<=l: 
-        s2,s1 = p*sound1[x], sound2[x]*(1 - p)
-        s.append(s1+s2)# add sounds
-        x+= 1
-        if x ==l:# end 
-            break
+    new_samples = []
+    x = 0
+    print(min_len)
+    while x < min_len:
+        s2, s1 = p * sound1[x], sound2[x] * (1 - p)
+        new_samples.append(s1 + s2)  # add sounds
+        x += 1
 
- 
-    
-    return {"rate": r, "samples": s}# return new sound
+    return {"rate": r, "samples": new_samples}  # return new sound
 
 
 def convolve(sound, kernel):
