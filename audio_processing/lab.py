@@ -116,8 +116,12 @@ def echo(sound, num_echoes, delay, scale):
 
 
 def pan(sound):
-    raise NotImplementedError
-
+    new_sound = {'rate': sound['rate'], 'left': sound['left'][:], 'right': sound['right'][:]}
+    left, right = new_sound['left'], new_sound['right']
+    for i in range(len(left)):
+        left[i] *= 1 - (i / (len(left) - 1))
+        right[i] *= i / (len(right) - 1)
+    return new_sound
 
 def remove_vocals(sound):
     raise NotImplementedError
