@@ -100,13 +100,19 @@ def echo(sound, num_echoes, delay, scale):
     Returns:
         A new mono sound dictionary resulting from applying the echo effect.
     """
-    delay_n = int(delay * sound["reta"])
-    echo_filter = [0] * (delay_n * num_echoes - 1)
-    for i in range(1, len(echo_filter)):
-        offset = int(i * delay)
-        echo_filter[offset] = scale * i
+    delay_n = round(delay * sound["rate"])
+    echo_filter = [0] * (delay_n * num_echoes + 1)
+    echo_filter[0] = 1
+    now_scale = 1
+    new_samples = [0] * (len(sound["samples"]) + delay_n * num_echoes)
+    new_sound = {"rate": sound["rate"], "samples": new_samples}
+    for i in range(0, num_echoes + 1):
+        offset = delay_n * i
+        for j, sample in enumerate(sound["samples"]):
+            new_samples[offset + j] += now_scale * sample
+        now_scale = now_scale * scale
+    return new_sound
 
-    return convolve(echo_flter, sound)
 
 
 def pan(sound):
