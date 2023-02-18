@@ -124,7 +124,11 @@ def pan(sound):
     return new_sound
 
 def remove_vocals(sound):
-    raise NotImplementedError
+    new_sound = {"rate": sound["rate"], "samples": [0] * len(sound["left"])}
+    left, right = sound["left"], sound["right"]
+    for i in range(len(left)):
+        new_sound["samples"][i] = sound["left"][i] - sound["right"][i]
+    return new_sound
 
 
 # below are helper functions for converting back-and-forth between WAV files
