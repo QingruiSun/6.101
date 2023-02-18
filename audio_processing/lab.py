@@ -74,25 +74,15 @@ def convolve(sound, kernel):
     samples = []  # a list of scaled sample lists
 
     for i, scale in enumerate(kernel):
-        scaled_sample = [0] * i  # offset scaled sound by filter index
-        scaled_sample += [scale * x for x in sound["samples"]]
+        scaled_sample = [scale * x for x in sound["samples"]]
         samples.append(scaled_sample)
 
     # combine samples into one list
-    final_sample = []
-    for sample in samples:
-        for i, val in enumerate(sample):
-            # if not long enough, add [0] to end
-            if i >= len(final_sample):
-                final_sample = final_sample + [0]
-
-            # update final sample with new sample value
-            new_sample = [0] * len(final_sample)
-            new_sample[i] = val
-            for j, prev_val in enumerate(final_sample):
-                new_sample[j] += prev_val
-            final_sample = new_sample
-
+    final_sample = [0] * (len(sound["samples"]) + len(kernel) - 1)
+    print(final_sample)
+    for i, sample in enumerate(samples):
+        for j, val in enumerate(sample):
+            final_sample[i + j] += val
     return {"rate": sound["rate"], "samples": final_sample}
 
 
