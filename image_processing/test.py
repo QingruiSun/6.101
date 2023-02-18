@@ -70,7 +70,17 @@ def test_inverted_1():
     compare_images(result, expected)
 
 def test_inverted_2():
-    assert False
+    originated_img = {
+            'height': 1
+            'width': 4,
+            'pixels': [23, 80, 149, 193]}
+    expected_img = {
+            'height': 1
+            'width': 4,
+            "pixels": [232, 175, 106, 162]}
+    result = lab.inverted(originated_img)
+    compare_images(result, expected_img)
+
 
 @pytest.mark.parametrize("fname", ['mushroom', 'twocats', 'chess'])
 def test_inverted_images(fname):
