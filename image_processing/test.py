@@ -71,11 +71,11 @@ def test_inverted_1():
 
 def test_inverted_2():
     originated_img = {
-            'height': 1
+            'height': 1,
             'width': 4,
             'pixels': [23, 80, 149, 193]}
     expected_img = {
-            'height': 1
+            'height': 1,
             'width': 4,
             "pixels": [232, 175, 106, 162]}
     result = lab.inverted(originated_img)
