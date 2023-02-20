@@ -9,7 +9,8 @@
 import math
 from PIL import Image
 
-def get_pixel(image, row, col, boundary_behavior):
+
+def get_pixel(image, row, col, boundary_behavior="extend"):
     height = image["height"]
     width = image["width"]
     if row >= 0 and row < height and col >= 0 and col < width:
@@ -63,6 +64,7 @@ def inverted(image):
 
 # HELPER FUNCTIONS
 
+
 def correlate(image, kernel, boundary_behavior):
     """
     Compute the result of correlating the given image with the given kernel.
@@ -114,6 +116,7 @@ def correlate(image, kernel, boundary_behavior):
             result_img["pixels"][i * width + j] = result_pixel
     print(result_img)
     return result_img
+
 
 def round_and_clip_image(image):
     """
@@ -182,7 +185,55 @@ def sharpened(image, kernel_size):
             )
     return round_and_clip_image(sharpened_img)
 
+
+def edges(image):
+    row_kernel = [-1, -2, -1, 0, 0, 0, 1, 2, 1]
+    col_kernel = [-1, 0, 1, -2, 0, 2, -1, 0, 1]
+    height = image["height"]
+    width = image["width"]
+    row_correlate_img = correlate(image, row_kernel, "extend")
+    col_correlate_img = correlate(image, col_kernel, "extend")
+    result_img = {"height": height, "width": width, "pixels": [0] * (height * width)}
+    for i in range(height):
+        for j in range(width):
+            index = i * width + j
+            result_img["pixels"][index] = math.sqrt(
+                row_correlate_img["pixels"][index] ** 2
+                + col_correlate_img["pixels"][index] ** 2
+            )
+    return round_and_clip_image(result_img)
+
+
 # VARIOUS FILTERS
+
+
+def get_channel(image, channel):
+    height = image["height"]
+    width = image["width"]
+    grey_image = {"height": height, "width": width, "pixels": [0] * (height * width)}
+    for i in range(height):
+        for j in range(width):
+            index = i * width + j
+            grey_image["pixels"][index] = image["pixels"][index][channel]
+    return grey_image
+
+
+def assemble_color_image(r_image, g_image, b_image):
+    height = r_image["height"]
+    width = r_image["width"]
+    color_image = {"height": height, "width": width, "pixels": []}
+    for i in range(height):
+        for j in range(width):
+            index = i * width + j
+            color_image["pixels"].append(
+                (
+                    r_image["pixels"][index],
+                    g_image["pixels"][index],
+                    b_image["pixels"][index],
+                )
+            )
+    return color_image
+
 
 def color_filter_from_greyscale_filter(filt):
     """
@@ -190,15 +241,31 @@ def color_filter_from_greyscale_filter(filt):
     greyscale image as output, returns a function that takes a color image as
     input and produces the filtered color image.
     """
-    raise NotImplementedError
+
+    def color_filter(image):
+        r_image = get_channel(image, 0)
+        g_image = get_channel(image, 1)
+        b_image = get_channel(image, 2)
+        r_filter_image = filt(r_image)
+        g_filter_image = filt(g_image)
+        b_filter_image = filt(b_image)
+        return assemble_color_image(r_filter_image, g_filter_image, b_filter_image)
+
+    return color_filter
 
 
 def make_blur_filter(kernel_size):
-    raise NotImplementedError
+    def func(image):
+        return blurred(image, kernel_size)
+
+    return func
 
 
 def make_sharpen_filter(kernel_size):
-    raise NotImplementedError
+    def func(image):
+        return sharpened(image, kernel_size)
+
+    return func
 
 
 def filter_cascade(filters):
