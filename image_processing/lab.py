@@ -11,8 +11,33 @@ from PIL import Image
 # NO ADDITIONAL IMPORTS ALLOWED!
 
 
-def get_pixel(image, row, col):
-    return image["pixels"][row * image["width"] + col]
+def get_pixel(image, row, col, boundary_behavior):
+    height = image["height"]
+    width = image["width"]
+    if row >= 0 and row < height and col >= 0 and col < width:
+        return image["pixels"][row * width + col]
+    if boundary_behavior == "zero":
+        return 0
+    if boundary_behavior == "extend":
+        if row <= 0:
+            if col <= 0:
+                return image["pixels"][0]
+            if col >= width:
+                return image["pixels"][width - 1]
+            return image["pixels"][col]
+        if row >= height - 1:
+            if col <= 0:
+                return image["pixels"][width * (height - 1)]
+            if col >= width:
+                return image["pixels"][width * height - 1]
+            return image["pixels"][(height - 1) * width + col]
+        if col < 0:
+            return image["pixels"][row * width]
+        return image["pixels"][row * width + width - 1]
+    if boundary_behavior == "wrap":
+        row = row % height
+        col = col % width
+        return images["pixles"][row * width + col]
 
 
 def set_pixel(image, row, col, color):
@@ -35,10 +60,11 @@ def apply_per_pixel(image, func):
 
 
 def inverted(image):
-    return apply_per_pixel(image, lambda color: 255-color)
+    return apply_per_pixel(image, lambda color: 255 - color)
 
 
 # HELPER FUNCTIONS
+
 
 def correlate(image, kernel, boundary_behavior):
     """
@@ -61,7 +87,36 @@ def correlate(image, kernel, boundary_behavior):
 
     DESCRIBE YOUR KERNEL REPRESENTATION HERE
     """
-    raise NotImplementedError
+    if (
+        boundary_behavior != "zero"
+        and boundary_behavior != "wrap"
+        and boundary_behavior != "extend"
+    ):
+        return None
+    width = image["width"]
+    height = image["height"]
+    result_img = {"width": width, "height": height, "pixels": [0] * (width * height)}
+    side_length = int(math.sqrt(len(kernel)))
+    for i in range(height):
+        for j in range(width):
+            half_length = side_length // 2
+            result_pixel = 0
+            for row in range(-half_length, half_length + 1):
+                for col in range(-half_length, half_length + 1):
+                    originated_pixel = get_pixel(
+                        image, i + row, j + col, boundary_behavior
+                    )
+                    if i == 5 and j == 5:
+                        print(originated_pixel)
+                    result_pixel += (
+                        originated_pixel
+                        * kernel[(row + half_length) * side_length + col + half_length]
+                    )
+                    if i == 5 and j == 5:
+                        print(result_pixel)
+            result_img["pixels"][i * width + j] = result_pixel
+    print(result_img)
+    return result_img
 
 
 def round_and_clip_image(image):
@@ -75,10 +130,16 @@ def round_and_clip_image(image):
     255 in the output; and any locations with values lower than 0 in the input
     should have value 0 in the output.
     """
-    raise NotImplementedError
+    for i, pixel in enumerate(image["pixels"]):
+        image["pixels"][i] = round["pixels"][i]
+        if image["pixels"] > 255:
+            image["pixels"][i] = 255
+        if image["pixels"][i] < 0:
+            image["pixels"][i] = 0
 
 
 # FILTERS
+
 
 def blurred(image, kernel_size):
     """
@@ -98,8 +159,8 @@ def blurred(image, kernel_size):
     raise NotImplementedError
 
 
-
 # HELPER FUNCTIONS FOR LOADING AND SAVING IMAGES
+
 
 def load_greyscale_image(filename):
     """
@@ -113,8 +174,9 @@ def load_greyscale_image(filename):
         img = Image.open(img_handle)
         img_data = img.getdata()
         if img.mode.startswith("RGB"):
-            pixels = [round(.299 * p[0] + .587 * p[1] + .114 * p[2])
-                      for p in img_data]
+            pixels = [
+                round(0.299 * p[0] + 0.587 * p[1] + 0.114 * p[2]) for p in img_data
+            ]
         elif img.mode == "LA":
             pixels = [p[0] for p in img_data]
         elif img.mode == "L":
