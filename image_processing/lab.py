@@ -172,6 +172,21 @@ def blurred(image, kernel_size):
 # HELPER FUNCTIONS FOR LOADING AND SAVING IMAGES
 
 
+def sharpened(image, kernel_size):
+    kernel = get_blur_kernel(kernel_size)
+    blurred_img = correlate(image, kernel, "extend")
+    height = image["height"]
+    width = image["width"]
+    sharpened_img = {"height": height, "width": width, "pixels": [0] * (height * width)}
+    for i in range(height):
+        for j in range(width):
+            index = i * width + j
+            sharpened_img["pixels"][index] = (
+                2 * image["pixels"][index] - blurred_img["pixels"][index]
+            )
+    return round_and_clip_image(sharpened_img)
+
+
 def load_greyscale_image(filename):
     """
     Loads an image from the given file and returns a dictionary
