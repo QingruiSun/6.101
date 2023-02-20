@@ -120,13 +120,37 @@ def test_blurred_images(kernsize, fname):
     assert object_hash(input_img) == input_hash, "Be careful not to modify the original image!"
     compare_images(result, expected)
 
-def test_blurred_black_image():
+@pytest.mark.parametrize("kernsize", [1, 3])
+def test_blurred_black_image(kernsize):
     # REPLACE THIS with your 1st test case from section 5.1
-    assert False
+    originated_img = {"height": 3,
+            "width": 3,
+            "pixels": [0, 0, 0,
+                       0, 0, 0,
+                       0, 0, 0]}
+    result_img = lab.blurred(originated_img, kernsize)
+    expected_img = {"height": 3,
+            "width": 3,
+            "pixels": [0, 0, 0,
+                       0, 0, 0,
+                       0, 0, 0]}
+    compare_images(result_img, expected_img)
 
 def test_blurred_centered_pixel():
     # REPLACE THIS with your 2nd test case from section 5.1
-    assert False
+    originated_img = {"height": 3,
+            "width": 3,
+            "pixels": [0, 0, 0,
+                       0, 255, 0,
+                       0, 0,   0]}
+    blurred_pixel = 255 // 9 
+    expected_img = {"height": 3,
+            "width": 3,
+            "pixels": [blurred_pixel, blurred_pixel, blurred_pixel,
+                       blurred_pixel, blurred_pixel, blurred_pixel,
+                       blurred_pixel, blurred_pixel, blurred_pixel]}
+    result_img = lab.blurred(originated_img, 3)
+    compare_images(result_img, expected_img)
 
 @pytest.mark.parametrize("kernsize", [1, 3, 9])
 @pytest.mark.parametrize("fname", ['mushroom', 'twocats', 'chess'])

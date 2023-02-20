@@ -131,14 +131,22 @@ def round_and_clip_image(image):
     should have value 0 in the output.
     """
     for i, pixel in enumerate(image["pixels"]):
-        image["pixels"][i] = round["pixels"][i]
-        if image["pixels"] > 255:
+        image["pixels"][i] = int(round(image["pixels"][i]))
+        if image["pixels"][i] > 255:
             image["pixels"][i] = 255
         if image["pixels"][i] < 0:
             image["pixels"][i] = 0
+    return image
 
 
 # FILTERS
+
+
+def get_blur_kernel(kernel_size):
+    kernel = []
+    for i in range(kernel_size * kernel_size):
+        kernel.append(1 / (kernel_size * kernel_size))
+    return kernel
 
 
 def blurred(image, kernel_size):
@@ -156,7 +164,9 @@ def blurred(image, kernel_size):
 
     # and, finally, make sure that the output is a valid image (using the
     # helper function from above) before returning it.
-    raise NotImplementedError
+    kernel = get_blur_kernel(kernel_size)
+    blurred_img = correlate(image, kernel, "extend")
+    return round_and_clip_image(blurred_img)
 
 
 # HELPER FUNCTIONS FOR LOADING AND SAVING IMAGES
