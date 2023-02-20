@@ -187,6 +187,24 @@ def sharpened(image, kernel_size):
     return round_and_clip_image(sharpened_img)
 
 
+def edges(image):
+    row_kernel = [-1, -2, -1, 0, 0, 0, 1, 2, 1]
+    col_kernel = [-1, 0, 1, -2, 0, 2, -1, 0, 1]
+    height = image["height"]
+    width = image["width"]
+    row_correlate_img = correlate(image, row_kernel, "extend")
+    col_correlate_img = correlate(image, col_kernel, "extend")
+    result_img = {"height": height, "width": width, "pixels": [0] * (height * width)}
+    for i in range(height):
+        for j in range(width):
+            index = i * width + j
+            result_img["pixels"][index] = math.sqrt(
+                row_correlate_img["pixels"][index] ** 2
+                + col_correlate_img["pixels"][index] ** 2
+            )
+    return round_and_clip_image(result_img)
+
+
 def load_greyscale_image(filename):
     """
     Loads an image from the given file and returns a dictionary
