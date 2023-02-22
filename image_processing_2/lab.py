@@ -274,6 +274,7 @@ def filter_cascade(filters):
     single filter such that applying that filter to an image produces the same
     output as applying each of the individual ones in turn.
     """
+
     def filter(image):
         for f in filters:
             image = f(image)
@@ -281,18 +282,10 @@ def filter_cascade(filters):
 
     return filter
 
+
 # SEAM CARVING
 
 # Main Seam Carving Implementation
-
-
-def seam_carving(image, ncols):
-    """
-    Starting from the given image, use the seam carving technique to remove
-    ncols (an integer) columns from the image. Returns a new image.
-    """
-    raise NotImplementedError
-
 
 # Optional Helper Functions for Seam Carving
 
@@ -303,7 +296,18 @@ def greyscale_image_from_color_image(image):
 
     Returns a greyscale image (represented as a dictionary).
     """
-    raise NotImplementedError
+    height = image["height"]
+    width = image["width"]
+    grey_image = {"height": height, "width": width, "pixels": [0] * (height * width)}
+    for i in range(height):
+        for j in range(width):
+            index = i * width + j
+            grey_image["pixels"][index] = round(
+                image["pixels"][index][0] * 0.299
+                + image["pixels"][index][1] * 0.587
+                + image["pixels"][index][2] * 0.114
+            )
+    return grey_image
 
 
 def compute_energy(grey):
@@ -313,7 +317,7 @@ def compute_energy(grey):
 
     Returns a greyscale image (represented as a dictionary).
     """
-    raise NotImplementedError
+    return edges(grey)
 
 
 def cumulative_energy_map(energy):
@@ -326,7 +330,28 @@ def cumulative_energy_map(energy):
     the values in the 'pixels' array may not necessarily be in the range [0,
     255].
     """
-    raise NotImplementedError
+    height = energy["height"]
+    width = energy["width"]
+    cumulative_energy = {
+        "height": height,
+        "width": width,
+        "pixels": [0] * (height * width),
+    }
+    for i in range(width):
+        cumulative_energy["pixels"][i] = energy["pixels"][i]
+    for i in range(1, height):
+        for j in range(width):
+            index = i * width + j
+            left = 100000
+            mid = 0
+            right = 100000
+            if j > 0:
+                left = cumulative_energy["pixels"][index - width - 1]
+            if j < width - 1:
+                right = cumulative_energy["pixels"][index - width + 1]
+            mid = cumulative_energy["pixels"][index - width]
+            cumulative_energy["pixels"][index] = min(left, mid, right) + energy["pixels"][index]
+    return cumulative_energy
 
 
 def minimum_energy_seam(cem):
@@ -335,7 +360,39 @@ def minimum_energy_seam(cem):
     'pixels' list that correspond to pixels contained in the minimum-energy
     seam (computed as described in the lab 2 writeup).
     """
-    raise NotImplementedError
+    height = cem["height"]
+    width = cem["width"]
+    indices = []
+    min_energy = 10000
+    min_index = -1
+    for i in range(0, width):
+        index = width * (height - 1) + i
+        if cem["pixels"][index] < min_energy:
+            min_energy = cem["pixels"][index]
+            min_index = index
+    indices.append(min_index)
+    prev_index = min_index
+    for i in range(height - 2, -1, -1):
+        mid_value = cem["pixels"][prev_index - width]
+        left_value = 10000
+        right_value = 10000
+        if prev_index % width != 0:
+            left_value = cem["pixels"][prev_index - width - 1]
+        if prev_index % width != (width - 1):
+            right_value = cem["pixels"][prev_index - width + 1]
+        min_value = min(left_value, mid_value, right_value)
+        if left_value == min_value:
+            min_index = prev_index - width - 1
+        elif mid_value == min_value:
+            min_index = prev_index - width
+        else:
+            min_index = prev_index - width + 1
+        indices.append(min_index)
+        prev_index = min_index
+    reverse_indices = []
+    for i in range(height - 1, -1, -1):
+        reverse_indices.append(indices[i])
+    return reverse_indices
 
 
 def image_without_seam(image, seam):
@@ -345,8 +402,32 @@ def image_without_seam(image, seam):
     pixels from the original image except those corresponding to the locations
     in the given list.
     """
-    raise NotImplementedError
+    height = image["height"]
+    width = image["width"]
+    new_image = {"height": height, "width": width - 1, "pixels": []}
+    for i in range(height):
+        for j in range(width):
+            index = i * width + j
+            if index != seam[i]:
+                new_image["pixels"].append(image["pixels"][index])
+    return new_image
 
+def seam_carving(image, ncols):
+    """
+    Starting from the given image, use the seam carving technique to remove
+    ncols (an integer) columns from the image. Returns a new image.
+    """
+    f = []
+    f.append(greyscale_image_from_color_image)
+    f.append(compute_energy)
+    f.append(cumulative_energy_map)
+    f.append(minimum_energy_seam)
+    filters = filter_cascade(f)
+    for i in range(ncols):
+        indices = filters(image)
+        new_image = image_without_seam(image, indices)
+        image = new_image
+    return image
 
 # HELPER FUNCTIONS FOR LOADING AND SAVING COLOR IMAGES
 
