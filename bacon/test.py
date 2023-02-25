@@ -24,6 +24,11 @@ def setup_module(module):
             setattr(module, f"fset_{i}", {frozenset(i[:-1]) for i in raw})
 
 
+def test_transform_data():
+    print(db_tiny)
+    assert len(db_tiny["actor_movie"][2876]) == 2
+    assert 4724 in db_tiny["movie_actor"][31932]
+
 def test_acted_together_01():
     # Simple test, two actors who acted together
     actor1 = 4724
