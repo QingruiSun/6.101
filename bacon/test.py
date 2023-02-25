@@ -71,6 +71,23 @@ def test_acted_together_additional(test_num):
     _run_pickled_together_test(test_num)
 
 
+@pytest.mark.parametrize("test_num", [0, 1, 2, 3])
+def test_tiny_bacon_number(test_num):
+    result = lab.actors_with_bacon_number(db_tiny, test_num)
+    if test_num == 0:
+        expected = {4724}
+        assert result == expected
+    if test_num == 1:
+        expected = {2876, 1532}
+        assert result == expected
+    if test_num == 2:
+        expected = {1640}
+        assert result == expected
+    if test_num == 3:
+        expected = set()
+        assert result == expected
+
+
 def test_bacon_number_01():
     # Actors with Bacon number of 2
     n = 2
