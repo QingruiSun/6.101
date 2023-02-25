@@ -33,7 +33,12 @@ def transform_data(raw_data):
 
 
 def acted_together(transformed_data, actor_id_1, actor_id_2):
-    raise NotImplementedError("Implement me!")
+    movie_1 = transformed_data["actor_movie"][actor_id_1]
+    movie_2 = transformed_data["actor_movie"][actor_id_2]
+    for movie in movie_1:
+        if movie in movie_2:
+            return True
+    return False
 
 
 def actors_with_bacon_number(transformed_data, n):
