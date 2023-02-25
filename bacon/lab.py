@@ -66,7 +66,28 @@ def actors_with_bacon_number(transformed_data, n):
 
 
 def bacon_path(transformed_data, actor_id):
-    raise NotImplementedError("Implement me!")
+    if actor_id not in transformed_data["actor_movie"]:
+        return None
+    visited = set()
+    visited.add(4724)
+    agenda = set()
+    agenda.add(4724)
+    parent = {}
+    while len(agenda) > 0:
+        new_agenda = set()
+        for actor in agenda:
+            for next_actor in transformed_data["actor_actor"][actor]:
+                if next_actor not in visited:
+                    new_agenda.add(next_actor)
+                    visited.add(next_actor)
+                    parent[next_actor] = actor
+        agenda = new_agenda
+    path = []
+    while actor_id in parent:
+        path.insert(0, actor_id)
+        actor_id = parent[actor_id]
+    path.insert(0, 4724)
+    return path
 
 
 def actor_to_actor_path(transformed_data, actor_id_1, actor_id_2):
