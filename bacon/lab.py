@@ -130,7 +130,39 @@ def bacon_movie_path(transformed_data, actor_id_1, actor_id_2):
 
 
 def actor_path(transformed_data, actor_id_1, goal_test_function):
-    raise NotImplementedError("Implement me!")
+    if actor_id_1 not in transformed_data["actor_movie"]:
+        return None
+    path = []
+    if goal_test_function(actor_id_1):
+        path.append(actor_id_1)
+        return path
+    visited = set()
+    visited.add(actor_id_1)
+    agenda = set()
+    agenda.add(actor_id_1)
+    parent = {}
+    find = False
+    find_actor_id = -1
+    while len(agenda) > 0 and not find:
+        new_agenda = set()
+        for actor in agenda:
+            for next_actor in transformed_data["actor_actor"][actor]:
+                if next_actor not in visited:
+                    visited.add(next_actor)
+                    new_agenda.add(next_actor)
+                    parent[next_actor] = actor
+                    if goal_test_function(next_actor):
+                        find = True
+                        find_actor_id = next_actor
+        agenda = new_agenda
+    if not find:
+        return None
+    actor_id = find_actor_id
+    while actor_id != actor_id_1:
+        path.insert(0, actor_id)
+        actor_id = parent[actor_id]
+    path.insert(0, actor_id_1)
+    return path
 
 
 def actors_connecting_films(transformed_data, film1, film2):
