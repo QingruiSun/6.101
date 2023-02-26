@@ -166,14 +166,54 @@ def actor_path(transformed_data, actor_id_1, goal_test_function):
 
 
 def actors_connecting_films(transformed_data, film1, film2):
-    raise NotImplementedError("Implement me!")
+    if (
+        film1 not in transformed_data["movie_actor"]
+        and film2 not in transformed_data["movie_actor"]
+    ):
+        return None
+    path = []
+    if film1 == film2:
+        return path
+    visited = set()
+    visited.add(film1)
+    agenda = set()
+    agenda.add(film1)
+    find = False
+    parent = {}
+    parent_actor = {}
+    while len(agenda) > 0:
+        new_agenda = set()
+        for film in agenda:
+            for actor in transformed_data["movie_actor"][film]:
+                for next_film in transformed_data["actor_movie"][actor]:
+                    if next_film not in visited:
+                        new_agenda.add(next_film)
+                        visited.add(next_film)
+                        parent[next_film] = film
+                        parent_actor[next_film] = actor
+                    if next_film == film2:
+                        find = True
+                        break
+                if find:
+                    break
+            if find:
+                break
+        if find:
+            break
+        agenda = new_agenda
+    if not find:
+        return None
+    film = film2
+    while film != film1:
+        path.insert(0, parent_actor[film])
+        film = parent[film]
+    return path
 
 
 if __name__ == "__main__":
     with open("resources/small.pickle", "rb") as f:
         smalldb = pickle.load(f)
-        movie_name = bacon_movie_path(transform_data(smalldb), 4724, 1640)
-        print(movie_name)
+        movie_name = actors_connecting_films(transform_data(smalldb), 10729, 21260)
 
     # additional code here will be run only when lab.py is invoked directly
     # (not when imported from test.py), so this is a good place to put code
