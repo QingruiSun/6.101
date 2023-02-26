@@ -64,6 +64,7 @@ def actors_with_bacon_number(transformed_data, n):
         agenda = new_agenda
     return agenda
 
+
 def actor_to_actor_path(transformed_data, actor_id_1, actor_id_2):
     if (
         actor_id_1 not in transformed_data["actor_movie"]
@@ -95,8 +96,37 @@ def actor_to_actor_path(transformed_data, actor_id_1, actor_id_2):
     path.insert(0, actor_id_1)
     return path
 
+
 def bacon_path(transformed_data, actor_id):
     return actor_to_actor_path(transformed_data, 4724, actor_id)
+
+
+def get_movie_name(movie_id):
+    with open("resources/movies.pickle", "rb") as f:
+        moviedb = pickle.load(f)
+        id_name = {}
+        for name, ids in moviedb.items():
+            if ids == movie_id:
+                return name
+    return None
+
+
+def bacon_movie_path(transformed_data, actor_id_1, actor_id_2):
+    path = actor_to_actor_path(transformed_data, actor_id_1, actor_id_2)
+    if path == None:
+        return None
+    moviedb = None
+    with open("resources/movies.pickle", "rb") as f:
+        moviedb = pickle.load(f)
+    movie_name_path = []
+    for i in range(len(path) - 1):
+        prev_actor_id = path[i]
+        next_actor_id = path[i + 1]
+        for prev_movie in transformed_data["actor_movie"][prev_actor_id]:
+            if prev_movie in transformed_data["actor_movie"][next_actor_id]:
+                movie_name_path.insert(0, get_movie_name(prev_movie))
+                break
+    return movie_name_path
 
 
 def actor_path(transformed_data, actor_id_1, goal_test_function):
@@ -108,9 +138,10 @@ def actors_connecting_films(transformed_data, film1, film2):
 
 
 if __name__ == "__main__":
-    with open("resources/tiny.pickle", "rb") as f:
+    with open("resources/small.pickle", "rb") as f:
         smalldb = pickle.load(f)
-        print(smalldb)
+        movie_name = bacon_movie_path(transform_data(smalldb), 4724, 1640)
+        print(movie_name)
 
     # additional code here will be run only when lab.py is invoked directly
     # (not when imported from test.py), so this is a good place to put code

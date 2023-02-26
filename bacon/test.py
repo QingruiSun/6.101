@@ -302,6 +302,9 @@ def _run_pickled_a2a_path_test(n):
         path = lab.actor_to_actor_path(db_large, a1, a2)
         check_valid_path(fset_large, path, a1, a2, l)
 
+def test_bacon_movie_path():
+    movie_path = lab.bacon_movie_path(db_tiny, 4724, 1640)
+    assert len(movie_path) == 2
 
 @pytest.mark.parametrize("test_num", [0, 1, 2, 3, 4])
 def test_actor_to_actor_path_additional(test_num):
