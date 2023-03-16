@@ -34,7 +34,22 @@ def new_game(level_description):
     The exact choice of representation is up to you; but note that what you
     return will be used as input to the other functions.
     """
-    raise NotImplementedError
+    height = len(level_description)
+    width = len(level_descriptsion[0])
+    target_position = ()
+    player_position = ()
+    grid = []
+    for i in range(height):
+        grid_row = []
+        for j in range(width):
+            if "target" in level_description[i][j]:
+                target_position = (i, j)
+            if "player" in level_description[i][j]:
+                player_position = (i, j)
+            grid_row.append(tuple(grid[i][j]))
+        grid.append(tuple(grid_row))
+
+    return (tuple(grid), (height, width), target_position, player_position)
 
 
 def victory_check(game):
@@ -43,7 +58,14 @@ def victory_check(game):
     a Boolean: True if the given game satisfies the victory condition, and
     False otherwise.
     """
-    raise NotImplementedError
+    grid = game[0]
+    height = grid[1][0]
+    width = grid[1][1]
+    for i in range(height):
+        for j in range(width):
+            if "computer" in grid[i][j] and "target" not in grid[i][j]:
+                return False
+    return True
 
 
 def step_game(game, direction):
@@ -55,7 +77,49 @@ def step_game(game, direction):
 
     This function should not mutate its input.
     """
-    raise NotImplementedError
+    grid = game[0]
+    target_position = game[2]
+    player_position = game[3]
+    height = grid[1][0]
+    width = grid[1][2]
+    new_grid = []
+    for i in range(height):
+        row_elements = (grid[i][j] for j in range(width))
+        new_grid.append(row_elements)
+    next_actions = {"up": [-1, 0], "down": [1, 0], "left": [0, -1], "right": [0, 1]}
+    next_action = next_actions[direction]
+    next_player_row = player_position[0] + next_action[0]
+    next_player_col = player_position[1] + next_action[1]
+    if "wall" in grid[next_player_row][next_player_col]:
+        return (tuple(new_grid), target_position, player_position)
+    if "computer" not in grid[next_player_row][next_player_col]:
+        new_grid[player_position[0]][player_position[1]] = (
+            ele
+            for ele in new_grid[player_position[0]][player_position[1]]
+            if ele != "player"
+        )
+        new_grid[next_player_row][next_player_col] += ("player",)
+        return (tuple(new_grid), target_position, (next_player_row, next_player_col))
+    next_computer_row, next_computer_col = (
+        next_player_row + next_action[0],
+        next_player_col + next_action[1],
+    )
+    if (
+        "computer" in grid[next_computer_row][next_computer_col]
+        or "wall" in grid[next_computer_row][next_computer_col]
+    ):
+        return (new_grid, target_position, player_position)
+    new_grid[player_position[0]][player_position[1]] = (
+        ele
+        for ele in new_grid[player_position[0]][player_position[1]]
+        if ele != "player"
+    )
+    new_grid[next_player_row][next_player_col] += ("player",)
+    new_grid[next_player_row][next_player_col] = (
+        ele for ele in new_grid[next_player_row][next_player_col] if ele != "computer"
+    )
+    new_grid[next_computer_row][next_computer_col] += ("computer",)
+    return (tuple(new_grid), target_position, (next_player_row, next_player_col))
 
 
 def dump_game(game):
@@ -69,7 +133,15 @@ def dump_game(game):
     print out the current state of your game for testing and debugging on your
     own.
     """
-    raise NotImplementedError
+    height = game[1][0]
+    width = game[1][1]
+    grid = []
+    for i in range(height):
+        grid_row = []
+        for j in range(width):
+            grid_row.append(list(game[0][i][j]))
+        grid.append(grid_row)
+    return grid
 
 
 def solve_puzzle(game):
