@@ -35,21 +35,18 @@ def new_game(level_description):
     return will be used as input to the other functions.
     """
     height = len(level_description)
-    width = len(level_descriptsion[0])
-    target_position = ()
+    width = len(level_description[0])
     player_position = ()
     grid = []
     for i in range(height):
         grid_row = []
         for j in range(width):
-            if "target" in level_description[i][j]:
-                target_position = (i, j)
             if "player" in level_description[i][j]:
                 player_position = (i, j)
-            grid_row.append(tuple(grid[i][j]))
+            grid_row.append(tuple(level_description[i][j]))
         grid.append(tuple(grid_row))
 
-    return (tuple(grid), (height, width), target_position, player_position)
+    return (tuple(grid), (height, width), player_position)
 
 
 def victory_check(game):
@@ -59,12 +56,17 @@ def victory_check(game):
     False otherwise.
     """
     grid = game[0]
-    height = grid[1][0]
-    width = grid[1][1]
+    height = game[1][0]
+    width = game[1][1]
+    nr_computer = 0
     for i in range(height):
         for j in range(width):
+            if "computer" in grid[i][j]:
+                nr_computer += 1
             if "computer" in grid[i][j] and "target" not in grid[i][j]:
                 return False
+    if nr_computer == 0:
+        return False
     return True
 
 
@@ -78,28 +80,33 @@ def step_game(game, direction):
     This function should not mutate its input.
     """
     grid = game[0]
-    target_position = game[2]
-    player_position = game[3]
-    height = grid[1][0]
-    width = grid[1][2]
+    player_position = game[2]
+    height = game[1][0]
+    width = game[1][1]
     new_grid = []
     for i in range(height):
-        row_elements = (grid[i][j] for j in range(width))
+        row_elements = [grid[i][j] for j in range(width)]
         new_grid.append(row_elements)
     next_actions = {"up": [-1, 0], "down": [1, 0], "left": [0, -1], "right": [0, 1]}
     next_action = next_actions[direction]
     next_player_row = player_position[0] + next_action[0]
     next_player_col = player_position[1] + next_action[1]
     if "wall" in grid[next_player_row][next_player_col]:
-        return (tuple(new_grid), target_position, player_position)
+        return (tuple(map(tuple, new_grid)), (height, width), player_position)
     if "computer" not in grid[next_player_row][next_player_col]:
-        new_grid[player_position[0]][player_position[1]] = (
-            ele
-            for ele in new_grid[player_position[0]][player_position[1]]
-            if ele != "player"
+        new_grid[player_position[0]][player_position[1]] = tuple(
+            [
+                ele
+                for ele in new_grid[player_position[0]][player_position[1]]
+                if ele != "player"
+            ]
         )
         new_grid[next_player_row][next_player_col] += ("player",)
-        return (tuple(new_grid), target_position, (next_player_row, next_player_col))
+        return (
+            tuple(map(tuple, new_grid)),
+            (height, width),
+            (next_player_row, next_player_col),
+        )
     next_computer_row, next_computer_col = (
         next_player_row + next_action[0],
         next_player_col + next_action[1],
@@ -108,18 +115,24 @@ def step_game(game, direction):
         "computer" in grid[next_computer_row][next_computer_col]
         or "wall" in grid[next_computer_row][next_computer_col]
     ):
-        return (new_grid, target_position, player_position)
-    new_grid[player_position[0]][player_position[1]] = (
-        ele
-        for ele in new_grid[player_position[0]][player_position[1]]
-        if ele != "player"
+        return (tuple(map(tuple, new_grid)), (height, width), player_position)
+    new_grid[player_position[0]][player_position[1]] = tuple(
+        [
+            ele
+            for ele in list(new_grid[player_position[0]][player_position[1]])
+            if ele != "player"
+        ]
     )
     new_grid[next_player_row][next_player_col] += ("player",)
-    new_grid[next_player_row][next_player_col] = (
-        ele for ele in new_grid[next_player_row][next_player_col] if ele != "computer"
+    new_grid[next_player_row][next_player_col] = tuple(
+        [ele for ele in new_grid[next_player_row][next_player_col] if ele != "computer"]
     )
     new_grid[next_computer_row][next_computer_col] += ("computer",)
-    return (tuple(new_grid), target_position, (next_player_row, next_player_col))
+    return (
+        tuple(map(tuple, new_grid)),
+        (height, width),
+        (next_player_row, next_player_col),
+    )
 
 
 def dump_game(game):
@@ -162,7 +175,23 @@ def solve_puzzle(game):
     path = {}
     find = False
     victory_state = None
+    nr_computer = 0
+    nr_target = 0
+    for i in range(game[1][0]):
+        for j in range(game[1][1]):
+            if "computer" in game[0][i][j]:
+                nr_computer += 1
+            if "target" in game[0][i][j]:
+                nr_target += 1
+    if nr_target < nr_computer:
+        return None
+    if nr_computer == 0:
+        return None
+    result = []
+    if victory_check(game):
+        return result
     while len(agent) != 0:
+        print(len(agent))
         old_agent = agent
         new_agent = set()
         for state in old_agent:
@@ -171,8 +200,8 @@ def solve_puzzle(game):
                 if next_state in visited:
                     continue
                 new_agent.add(next_state)
-                visted.add(next_state)
-                path[next_state] = action
+                visited.add(next_state)
+                path[next_state] = (action, state)
                 if victory_check(next_state):
                     find = True
                     victory_state = next_state
@@ -184,12 +213,11 @@ def solve_puzzle(game):
         agent = new_agent
     if not find:
         return None
-    result = []
     state = victory_state
     reverse_actions = {"up": "down", "down": "up", "left": "right", "right": "left"}
     while state != game:
-        result.insert(0, path[state])
-        prev_state = step_game(state, reverse_actions[path[state]])
+        result.insert(0, path[state][0])
+        prev_state = path[state][1]
         state = prev_state
     return result
 
