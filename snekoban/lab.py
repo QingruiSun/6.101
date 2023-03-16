@@ -154,7 +154,44 @@ def solve_puzzle(game):
 
     If the given level cannot be solved, return None.
     """
-    raise NotImplementedError
+    actions = ["up", "down", "left", "right"]
+    visited = set()
+    agent = set()
+    agent.add(game)
+    visited.add(game)
+    path = {}
+    find = False
+    victory_state = None
+    while len(agent) != 0:
+        old_agent = agent
+        new_agent = set()
+        for state in old_agent:
+            for action in actions:
+                next_state = step_game(state, action)
+                if next_state in visited:
+                    continue
+                new_agent.add(next_state)
+                visted.add(next_state)
+                path[next_state] = action
+                if victory_check(next_state):
+                    find = True
+                    victory_state = next_state
+                    break
+            if find == True:
+                break
+        if find == True:
+            break
+        agent = new_agent
+    if not find:
+        return None
+    result = []
+    state = victory_state
+    reverse_actions = {"up": "down", "down": "up", "left": "right", "right": "left"}
+    while state != game:
+        result.insert(0, path[state])
+        prev_state = step_game(state, reverse_actions[path[state]])
+        state = prev_state
+    return result
 
 
 if __name__ == "__main__":
