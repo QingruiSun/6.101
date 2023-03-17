@@ -37,30 +37,52 @@ def make_atomic_costs(recipes):
     return atomic_cost
 
 
-def lowest_cost_helper(recipe_book, atomic_costs, food_item):
+def lowest_cost_helper(recipe_book, atomic_costs, food_item, fobiddens=None):
+    if fobiddens == None:
+        fobiddens = []
+    if food_item in fobiddens:
+        return False, 0
     if food_item in atomic_costs:
-        return atomic_costs[food_item]
+        return True, atomic_costs[food_item]
+    if food_item not in recipe_book:
+        return False, 0
     recipes = recipe_book[food_item]
-    min_cost = 10000000
+    min_cost = -1
+    is_first = True
+    have_make = False
     for recipe in recipes:
         current_cost = 0
+        can_make = True
         for element in recipe:
-            current_cost += (
-                lowest_cost_helper(recipe_book, atomic_costs, element[0]) * element[1]
+            sub_can_make, sub_cost = lowest_cost_helper(
+                recipe_book, atomic_costs, element[0], fobiddens
             )
-        if current_cost < min_cost:
+            if sub_can_make == False:
+                can_make = False
+                break
+            else:
+                current_cost += sub_cost * element[1]
+        if can_make and (is_first or (current_cost < min_cost)):
+            is_first = False
             min_cost = current_cost
-    return min_cost
+            have_make = True
+    return have_make, min_cost
 
 
-def lowest_cost(recipes, food_item):
+def lowest_cost(recipes, food_item, fobiddens=None):
     """
     Given a recipes list and the name of a food item, return the lowest cost of
     a full recipe for the given food item.
     """
     recipe_book = make_recipe_book(recipes)
     atomic_costs = make_atomic_costs(recipes)
-    return lowest_cost_helper(recipe_book, atomic_costs, food_item)
+    have_make, min_cost = lowest_cost_helper(
+        recipe_book, atomic_costs, food_item, fobiddens
+    )
+    if have_make:
+        return min_cost
+    else:
+        return None
 
 
 def scale_recipe(flat_recipe, n):
