@@ -70,6 +70,18 @@ def victory_check(game):
     return True
 
 
+def concate_str_to_ordered_tuple(box, element):
+    if len(box) == 0:
+        return (element,)
+    box_len = len(box)
+    i = 0
+    while i < box_len:
+        if element < box[i]:
+            break
+        i += 1
+    return box[0:i] + (element,) + box[i:box_len]
+
+
 def step_game(game, direction):
     """
     Given a game representation (of the form returned from new_game), return a
@@ -101,7 +113,9 @@ def step_game(game, direction):
                 if ele != "player"
             ]
         )
-        new_grid[next_player_row][next_player_col] += ("player",)
+        new_grid[next_player_row][next_player_col] = concate_str_to_ordered_tuple(
+            new_grid[next_player_row][next_player_col], "player"
+        )
         return (
             tuple(map(tuple, new_grid)),
             (height, width),
@@ -123,11 +137,15 @@ def step_game(game, direction):
             if ele != "player"
         ]
     )
-    new_grid[next_player_row][next_player_col] += ("player",)
+    new_grid[next_player_row][next_player_col] = concate_str_to_ordered_tuple(
+        new_grid[next_player_row][next_player_col], "player"
+    )
     new_grid[next_player_row][next_player_col] = tuple(
         [ele for ele in new_grid[next_player_row][next_player_col] if ele != "computer"]
     )
-    new_grid[next_computer_row][next_computer_col] += ("computer",)
+    new_grid[next_computer_row][next_computer_col] = concate_str_to_ordered_tuple(
+        new_grid[next_computer_row][next_computer_col], "computer"
+    )
     return (
         tuple(map(tuple, new_grid)),
         (height, width),
