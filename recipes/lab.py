@@ -179,17 +179,52 @@ def ingredient_mixes(flat_recipes):
     the flat recipes make a certain ingredient as part of a recipe, compute all
     combinations of the flat recipes.
     """
-    raise NotImplementedError
+    if not flat_recipes:
+        return []
+    if len(flat_recipes) == 1:
+        return flat_recipes[0]
+    list1, list2 = flat_recipes[0], ingredient_mixes(flat_recipes[1:])
+    flats = []
+    for elem1 in list1:
+        for elem2 in list2:
+            flats.append(make_grocery_list([elem1, elem2]))
+    return flats
 
 
-def all_flat_recipes(recipes, food_item):
+def all_flat_recipes(recipes, food_item, forbiddens=[]):
     """
     Given a list of recipes and the name of a food item, produce a list (in any
     order) of all possible flat recipes for that category.
 
     Returns an empty list if there are no possible recipes
     """
-    raise NotImplementedError
+    recipe_book = make_recipe_book(recipes)
+    atomic_costs = make_atomic_costs(recipes)
+
+    def all_flat_recipes_helper(food_item, forbiddens=None):
+        if food_item in forbiddens:
+            return []
+        if food_item in atomic_costs:
+            return [{food_item: 1}]
+        if food_item not in recipe_book:
+            return []
+        all_flat_list = []
+        item_recipes = recipe_book[food_item]
+        for recipe in item_recipes:
+            flat_recipes = []
+            for ingre in recipe:
+                ingre_list = []
+                ingre_recipes = all_flat_recipes(recipes, ingre[0], forbiddens)
+                while ingre_recipes:
+                    ingre_recipe = ingre_recipes.pop()
+                    scaled = scale_recipe(ingre_recipe, ingre[1])
+                    flat = make_grocery_list([scaled])
+                    ingre_list.append(flat)
+                flat_recipes.append(ingre_list)
+            all_flat_list.extend(ingredient_mixes(flat_recipes))
+        return all_flat_list
+
+    return all_flat_recipes_helper(food_item, forbiddens)
 
 
 if __name__ == "__main__":
