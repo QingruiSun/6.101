@@ -14,6 +14,7 @@ sys.setrecursionlimit(10_000)
 
 def assignment_variable(formula, variable, value):
     new_formula = []
+    possible_formula = True
 
     for clause in formula:
         new_clause = []
@@ -30,11 +31,12 @@ def assignment_variable(formula, variable, value):
             else:
                 new_clause.append(literal)
         if len(new_clause) == 0 and variable_literal != None:
+            possible_formula = False
             new_clause.append(variable_literal)
         if select_clause:
             new_formula.append(new_clause)
     
-    return new_formula
+    return new_formula, possible_formula
 
 def parse_variable_list(formula):
     variable_set = set()
@@ -42,6 +44,25 @@ def parse_variable_list(formula):
         for literal in clause:
             variable_set.add(literal[0])
     return list(variable_set)
+
+
+def satisfying_assignment_helper(formula, variable_list, index, result_map):
+    if index >= len(variable_list):
+        return True
+    true_formula, true_formula_possible = assignment_variable(formula, variable_list[index], True)
+    if true_formula_possible:
+        true_formula_possible = satisfying_assignment_helper(true_formula, variable_list, index + 1, result_map)
+    if true_formula_possible:
+        result_map[variable_list[index]] = True
+        return True
+    false_formula, false_formula_possible = assignment_variable(formula, variable_list[index], False)
+    if false_formula_possible:
+        false_formula_possible = satisfying_assignment_helper(false_formula, variable_list, index + 1, result_map)
+    if false_formula_possible:
+        result_map[variable_list[index]] = False
+        return True
+
+    return False
 
 
 def satisfying_assignment(formula):
@@ -56,7 +77,12 @@ def satisfying_assignment(formula):
     True
     >>> satisfying_assignment([[('a', True)], [('a', False)]])
     """
-    
+    result_map = {}
+    variable_list = parse_variable_list(formula)
+    possible = satisfying_assignment_helper(formula, variable_list, 0, result_map)
+    if possible:
+        return result_map
+    return None
 
 
 def sudoku_board_to_sat_formula(sudoku_board):
