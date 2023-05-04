@@ -12,6 +12,38 @@ sys.setrecursionlimit(10_000)
 # NO ADDITIONAL IMPORTS
 
 
+def assignment_variable(formula, variable, value):
+    new_formula = []
+
+    for clause in formula:
+        new_clause = []
+        select_clause = True
+        variable_literal = None
+        for literal in clause:
+            if literal[0] == variable:
+                if literal[1] == value:
+                    select_clause = False
+                    break
+                else:
+                    variable_literal = literal
+                    
+            else:
+                new_clause.append(literal)
+        if len(new_clause) == 0 and variable_literal != None:
+            new_clause.append(variable_literal)
+        if select_clause:
+            new_formula.append(new_clause)
+    
+    return new_formula
+
+def parse_variable_list(formula):
+    variable_set = set()
+    for clause in formula:
+        for literal in clause:
+            variable_set.add(literal[0])
+    return list(variable_set)
+
+
 def satisfying_assignment(formula):
     """
     Find a satisfying assignment for a given CNF formula.
@@ -24,7 +56,7 @@ def satisfying_assignment(formula):
     True
     >>> satisfying_assignment([[('a', True)], [('a', False)]])
     """
-    raise NotImplementedError
+    
 
 
 def sudoku_board_to_sat_formula(sudoku_board):

@@ -86,6 +86,35 @@ def test_sat_small_nested_backtrack():
     ]
     _satisfiable(cnf)
 
+def test_sat_small_assign_variable():
+    cnf = [
+        [("a", True), ("b", True)],
+        [("a", False), ("b", False), ("c", True)],
+        [("b", True), ("c", True)],
+        [("b", True), ("c", False)],
+    ]
+    new_cnf = lab.assignment_variable(cnf, "b", True)
+    assert len(new_cnf) == 1
+    assert len(new_cnf[0]) == 2
+    assert new_cnf[0][0] == ("a", False)
+
+def test_sat_small_assign_variable_2():
+    cnf = [
+        [("a", True)],
+        [("a", False)],
+    ]
+    new_cnf = lab.assignment_variable(cnf, "a", True)
+    assert len(new_cnf) == 1
+    assert new_cnf[0] == False 
+
+def test_sat_parse_variable_list():
+    cnf = [
+        [("a", True), ("b", False)],
+        [("a", False), ("b", True)],
+        [("a", False), ("c", False)],
+    ]
+    variable_list = lab.parse_variable_list(cnf)
+    assert len(variable_list) == 3
 
 def test_sat_small_double_backtrack():
     # a will be guessed as True, which is wrong
